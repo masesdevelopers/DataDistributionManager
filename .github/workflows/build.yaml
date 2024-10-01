@@ -8,6 +8,13 @@ on:
   push:
     # only trigger on branches, not on tags
     branches: '**'
+    paths-ignore:
+      - 'docs/**'
+  workflow_dispatch:
+  
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.event.pull_request.head.label || github.head_ref || github.ref }}'
+  cancel-in-progress: true
 
 # This workflow contains two jobs called "check_opendds", "build_opendds_windows", "check_changes", "build_ddm_windows"
 jobs:
@@ -27,7 +34,7 @@ jobs:
           lookup-only: true
           enableCrossOsArchive: true
           path: ./OutputOpenDDS/
-          key: OpenDDS_3.25
+          key: OpenDDS_3.29.1
 
       - name: If failed we need to rebuild artifact
         id: check_existsOpenDDS
@@ -59,97 +66,97 @@ jobs:
       - name: Configure OpenDDS
         shell: cmd
         run: |
-          cd third_party\OpenDDS
+          cd src\3rdparty\OpenDDS
           configure
 
       - name: Build OpenDDS x64
         shell: cmd
         run: |
-          cd third_party\OpenDDS
+          cd src\3rdparty\OpenDDS
           call setenv.cmd
           msbuild -p:Configuration=Release,Platform=x64 -m DDS_TAOv2.sln
 
       - name: Move OpenDDS x64 binaries
         shell: cmd
         run: |
-          cd third_party\OpenDDS
-          xcopy .\lib\*.dll ..\..\Output\x64\
-          xcopy .\lib\*.lib ..\..\Output\lib64\
-          xcopy .\bin\*.exe ..\..\Output\bin64\
-          xcopy .\ACE_wrappers\lib\*.dll ..\..\Output\x64\
-          xcopy .\ACE_wrappers\lib\*.lib ..\..\Output\lib64\
-          xcopy .\ACE_wrappers\bin\*.exe ..\..\Output\bin64\
+          cd src\3rdparty\OpenDDS
+          xcopy .\lib\*.dll ..\..\..\Output\x64\
+          xcopy .\lib\*.lib ..\..\..\Output\lib64\
+          xcopy .\bin\*.exe ..\..\..\Output\bin64\
+          xcopy .\ACE_wrappers\lib\*.dll ..\..\..\Output\x64\
+          xcopy .\ACE_wrappers\lib\*.lib ..\..\..\Output\lib64\
+          xcopy .\ACE_wrappers\bin\*.exe ..\..\..\Output\bin64\
           
       - name: Move OpenDDS x64 PDB
         shell: cmd
         run: |
-          cd third_party\OpenDDS
+          cd src\3rdparty\OpenDDS
           mkdir ..\..\OutputPdb
-          xcopy .\lib\*.pdb ..\..\OutputPdb\pdb64\
-          xcopy .\bin\*.pdb ..\..\OutputPdb\pdb64\
-          xcopy .\ACE_wrappers\lib\*.pdb ..\..\OutputPdb\pdb64\
-          xcopy .\ACE_wrappers\bin\*.pdb ..\..\OutputPdb\pdb64\
+          xcopy .\lib\*.pdb ..\..\..\OutputPdb\pdb64\
+          xcopy .\bin\*.pdb ..\..\..\OutputPdb\pdb64\
+          xcopy .\ACE_wrappers\lib\*.pdb ..\..\..\OutputPdb\pdb64\
+          xcopy .\ACE_wrappers\bin\*.pdb ..\..\..\OutputPdb\pdb64\
 
       - name: Build OpenDDS x86
         shell: cmd
         run: |
-          cd third_party\OpenDDS
+          cd src\3rdparty\OpenDDS
           call setenv.cmd
           msbuild -p:Configuration=Release,Platform=Win32 -m DDS_TAOv2.sln
 
       - name: Move OpenDDS x86 binaries
         shell: cmd
         run: |
-          cd third_party\OpenDDS
-          xcopy .\lib\*.dll ..\..\Output\x86\
-          xcopy .\lib\*.lib ..\..\Output\lib32\
-          xcopy .\bin\*.exe ..\..\Output\bin32\
-          xcopy .\ACE_wrappers\lib\*.dll ..\..\Output\x86\
-          xcopy .\ACE_wrappers\lib\*.lib ..\..\Output\lib32\
-          xcopy .\ACE_wrappers\bin\*.exe ..\..\Output\bin32\
+          cd src\3rdparty\OpenDDS
+          xcopy .\lib\*.dll ..\..\..\Output\x86\
+          xcopy .\lib\*.lib ..\..\..\Output\lib32\
+          xcopy .\bin\*.exe ..\..\..\Output\bin32\
+          xcopy .\ACE_wrappers\lib\*.dll ..\..\..\Output\x86\
+          xcopy .\ACE_wrappers\lib\*.lib ..\..\..\Output\lib32\
+          xcopy .\ACE_wrappers\bin\*.exe ..\..\..\Output\bin32\
 
       - name: Move OpenDDS x86 PDB
         shell: cmd
         run: |
-          cd third_party\OpenDDS
-          xcopy .\lib\*.pdb ..\..\OutputPdb\pdb32\
-          xcopy .\bin\*.pdb ..\..\OutputPdb\pdb32\
-          xcopy .\ACE_wrappers\lib\*.pdb ..\..\OutputPdb\pdb32\
-          xcopy .\ACE_wrappers\bin\*.pdb ..\..\OutputPdb\pdb32\
+          cd src\3rdparty\OpenDDS
+          xcopy .\lib\*.pdb ..\..\..\OutputPdb\pdb32\
+          xcopy .\bin\*.pdb ..\..\..\OutputPdb\pdb32\
+          xcopy .\ACE_wrappers\lib\*.pdb ..\..\..\OutputPdb\pdb32\
+          xcopy .\ACE_wrappers\bin\*.pdb ..\..\..\OutputPdb\pdb32\
 
       - name: Move setenv.cmd
         shell: cmd
         run: |
-          cd third_party\OpenDDS
-          xcopy setenv.cmd ..\..\Output\
+          cd src\3rdparty\OpenDDS
+          xcopy setenv.cmd ..\..\..\Output\
 
       - name: Prepare for packaging OpenDDS Binaries and PDB
         run: |
           New-Item -Path .\OutputOpenDDS -ItemType directory
-          Compress-Archive -Path .\Output\* -DestinationPath .\OutputOpenDDS\OpenDDS_Build_3.25.zip
-          Compress-Archive -Path .\OutputPdb\* -DestinationPath .\OutputOpenDDS\OpenDDS_PDB_Build_3.25.zip
+          Compress-Archive -Path .\Output\* -DestinationPath .\OutputOpenDDS\OpenDDS_Build_3.29.1.zip
+          Compress-Archive -Path .\OutputPdb\* -DestinationPath .\OutputOpenDDS\OpenDDS_PDB_Build_3.29.1.zip
 
       - name: Prepare for packaging OpenDDS Headers
         shell: cmd
         run: |
-          7z a .\OutputOpenDDS\OpenDDS_Headers_3.25.zip .\third_party\OpenDDS\*.h -r
-          7z u .\OutputOpenDDS\OpenDDS_Headers_3.25.zip .\third_party\OpenDDS\*.inl -r
+          7z a .\OutputOpenDDS\OpenDDS_Headers_3.29.1.zip .\src\3rdparty\OpenDDS\*.h -r
+          7z u .\OutputOpenDDS\OpenDDS_Headers_3.29.1.zip .\src\3rdparty\OpenDDS\*.inl -r
 
       - name: Save OpenDDS in cache
         uses: actions/cache/save@v4
         with:
           enableCrossOsArchive: true
           path: ./OutputOpenDDS/
-          key: OpenDDS_3.25
+          key: OpenDDS_3.29.1
 
       - name: Upload OpenDDS
         if: ${{ github.repository_owner == 'masesgroup'}} # do not upload any artifact outside main repo
         continue-on-error: true
         shell: cmd
         run: |
-          python %GITHUB_WORKSPACE%\third_party\CommonTools\scripts\utilsftp.py -c upload -s ${{ secrets.FTP_STORE_SITE }} -u ${{ secrets.FTP_STORE_USER }} -p ${{ secrets.FTP_STORE_PASSWORD }} -r OpenDDS_Build_3.25.zip -l %GITHUB_WORKSPACE%\OutputOpenDDS\OpenDDS_Build_3.25.zip
-          python %GITHUB_WORKSPACE%\third_party\CommonTools\scripts\utilsftp.py -c upload -s ${{ secrets.FTP_STORE_SITE }} -u ${{ secrets.FTP_STORE_USER }} -p ${{ secrets.FTP_STORE_PASSWORD }} -r OpenDDS_PDB_Build_3.25.zip -l %GITHUB_WORKSPACE%\OutputOpenDDS\OpenDDS_PDB_Build_3.25.zip
-          python %GITHUB_WORKSPACE%\third_party\CommonTools\scripts\utilsftp.py -c upload -s ${{ secrets.FTP_STORE_SITE }} -u ${{ secrets.FTP_STORE_USER }} -p ${{ secrets.FTP_STORE_PASSWORD }} -r OpenDDS_Headers_3.25.zip -l %GITHUB_WORKSPACE%\OutputOpenDDS\OpenDDS_Headers_3.25.zip
+          python %GITHUB_WORKSPACE%\src\3rdparty\CommonTools\scripts\utilsftp.py -c upload -s ${{ secrets.FTP_STORE_SITE }} -u ${{ secrets.FTP_STORE_USER }} -p ${{ secrets.FTP_STORE_PASSWORD }} -r OpenDDS_Build_3.29.1.zip -l %GITHUB_WORKSPACE%\OutputOpenDDS\OpenDDS_Build_3.29.1.zip
+          python %GITHUB_WORKSPACE%\src\3rdparty\CommonTools\scripts\utilsftp.py -c upload -s ${{ secrets.FTP_STORE_SITE }} -u ${{ secrets.FTP_STORE_USER }} -p ${{ secrets.FTP_STORE_PASSWORD }} -r OpenDDS_PDB_Build_3.29.1.zip -l %GITHUB_WORKSPACE%\OutputOpenDDS\OpenDDS_PDB_Build_3.29.1.zip
+          python %GITHUB_WORKSPACE%\src\3rdparty\CommonTools\scripts\utilsftp.py -c upload -s ${{ secrets.FTP_STORE_SITE }} -u ${{ secrets.FTP_STORE_USER }} -p ${{ secrets.FTP_STORE_PASSWORD }} -r OpenDDS_Headers_3.29.1.zip -l %GITHUB_WORKSPACE%\OutputOpenDDS\OpenDDS_Headers_3.29.1.zip
         env:
           GITHUB_WORKSPACE: $GITHUB_WORKSPACE
 
@@ -226,7 +233,7 @@ jobs:
       - name: Build Common Tools
         shell: cmd
         run: |
-          cd third_party\CommonTools
+          cd src\3rdparty\CommonTools
           msbuild -p:Configuration=Release,Platform="Any CPU" -m CommonTools.sln
 
       - name: Extract commit SHA
@@ -237,7 +244,7 @@ jobs:
       - name: Prepare version
         shell: cmd
         run: |
-          cd third_party\CommonTools\Output
+          cd src\3rdparty\CommonTools\Output
           VersionGenerator %GITHUB_WORKSPACE%\src\ProductInformation\Version.cs %GITHUB_WORKSPACE%\src\ProductInformation ${{ env.GITHUB_COMMIT_MESSAGE }}
         env:
           GITHUB_WORKSPACE: $GITHUB_WORKSPACE
@@ -245,8 +252,8 @@ jobs:
       - name: Prepare packaging versioning
         shell: cmd
         run: |
-          third_party\CommonTools\Output\PlaceHolderReplacer.exe .\src\ProductInformation\Version.cs .\packaging\nuget\datadistributionmanager.nuspec >> .\nuget_version.txt
-          third_party\CommonTools\Output\PlaceHolderReplacer.exe .\src\ProductInformation\Version.cs .\packaging\maven\pom.xml "-SNAPSHOT"
+          src\3rdparty\CommonTools\Output\PlaceHolderReplacer.exe .\src\ProductInformation\Version.cs .\src\packaging\nuget\datadistributionmanager.nuspec >> .\nuget_version.txt
+          src\3rdparty\CommonTools\Output\PlaceHolderReplacer.exe .\src\ProductInformation\Version.cs .\src\packaging\maven\pom.xml "-SNAPSHOT"
 
       - name: Store version
         run: |
@@ -255,14 +262,14 @@ jobs:
 
       - name: Verify Nuget version in file
         run: |
-          type .\packaging\nuget\datadistributionmanager.nuspec
+          type .\src\packaging\nuget\datadistributionmanager.nuspec
           echo ${{ env.NUGET_PACKAGE_VERSION }}
         shell: cmd
 
       - name: Configure OpenDDS to download ACE/TAO
         shell: cmd
         run: |
-          cd third_party\OpenDDS
+          cd src\3rdparty\OpenDDS
           configure
 
       - name: Restore OpenDDS from cache
@@ -271,32 +278,32 @@ jobs:
           fail-on-cache-miss: true
           enableCrossOsArchive: true
           path: ./OutputOpenDDS/
-          key: OpenDDS_3.25
+          key: OpenDDS_3.29.1
 
       - name: Prepare OpenDDS Binaries
         run: |
-          Expand-Archive -LiteralPath '.\OutputOpenDDS\OpenDDS_Build_3.25.zip' -DestinationPath .\Output -Force
+          Expand-Archive -LiteralPath '.\OutputOpenDDS\OpenDDS_Build_3.29.1.zip' -DestinationPath .\Output -Force
           
       - name: Prepare OpenDDS Headers
         run: |
-          Expand-Archive -LiteralPath '.\OutputOpenDDS\OpenDDS_Headers_3.25.zip' -DestinationPath .\third_party\OpenDDS -Force
+          Expand-Archive -LiteralPath '.\OutputOpenDDS\OpenDDS_Headers_3.29.1.zip' -DestinationPath .\src\3rdparty\OpenDDS -Force
 
       - name: Move OpenDDS x64
         shell: cmd
         run: |
-           xcopy .\Output\bin32\*.* .\third_party\OpenDDS\bin\
-           xcopy .\Output\x86\*.dll .\third_party\OpenDDS\lib\
-           xcopy .\Output\bin32\*.* .\third_party\OpenDDS\ACE_wrappers\bin\
-           xcopy .\Output\x86\*.dll .\third_party\OpenDDS\ACE_wrappers\lib\
+           xcopy .\Output\bin32\*.* .\src\3rdparty\OpenDDS\bin\
+           xcopy .\Output\x86\*.dll .\src\3rdparty\OpenDDS\lib\
+           xcopy .\Output\bin32\*.* .\src\3rdparty\OpenDDS\ACE_wrappers\bin\
+           xcopy .\Output\x86\*.dll .\src\3rdparty\OpenDDS\ACE_wrappers\lib\
 
       - name: Generate OpenDDS projects
         shell: cmd
         run: |
-          call .\third_party\OpenDDS\setenv.cmd
-          cd src\DataDistributionManagerOpenDDS
+          call .\src\3rdparty\OpenDDS\setenv.cmd
+          cd src\native\DataDistributionManagerOpenDDS
           perl %ACE_ROOT%\bin\generate_export_file.pl DataDistributionSchemaCommon > DataDistributionSchemaCommon_Export.h
           perl %ACE_ROOT%\bin\mwc.pl -type vs2022 DataDistributionManagerOpenDDS.mwc
-          cd ..\..
+          cd ..\..\..
 
       - uses: nuget/setup-nuget@v2.0.0
         with:
@@ -306,7 +313,7 @@ jobs:
       - name: Build DataDistributionManager x64
         shell: cmd
         run: |
-          call .\third_party\OpenDDS\setenv.cmd
+          call .\src\3rdparty\OpenDDS\setenv.cmd
           set JDK_ROOT_FOLDER=%JAVA_HOME_11_X64%
           cd src
           msbuild /m -p:Configuration=Release,Platform=x64 DataDistributionManager.sln
@@ -314,16 +321,16 @@ jobs:
       - name: Build DataDistributionManager x86
         shell: cmd
         run: |
-          call .\third_party\OpenDDS\setenv.cmd
+          call .\src\3rdparty\OpenDDS\setenv.cmd
           set JDK_ROOT_FOLDER=%JAVA_HOME_11_X64%
           cd src
           msbuild /m -p:Configuration=Release,Platform=Win32 DataDistributionManager.sln
 
-      - name: Build DataDistributionManager net462, net6.0 and net7.0
+      - name: Build DataDistributionManager net462, net6.0 and net8.0
         run: |
-          dotnet build --no-incremental --configuration Release --framework net462 -o Output src\DataDistributionManagerNet\DataDistributionManagerNet.csproj
-          dotnet build --no-incremental --configuration Release --framework net6.0 -o Outputnet6.0 src\DataDistributionManagerNet\DataDistributionManagerNet.csproj
-          dotnet build --no-incremental --configuration Release --framework net7.0 -o Outputnet7.0 src\DataDistributionManagerNet\DataDistributionManagerNet.csproj
+          dotnet build --no-incremental --configuration Release --framework net462 -o Output src\net\DataDistributionManagerNet\DataDistributionManagerNet.csproj
+          dotnet build --no-incremental --configuration Release --framework net6.0 -o Outputnet6.0 src\net\DataDistributionManagerNet\DataDistributionManagerNet.csproj
+          dotnet build --no-incremental --configuration Release --framework net8.0 -o Outputnet8.0 src\net\DataDistributionManagerNet\DataDistributionManagerNet.csproj
 
       - name: Prepare for packaging
         run: |
@@ -339,10 +346,10 @@ jobs:
           New-Item -Path .\OutputPackage\pdb\x64 -ItemType directory
           New-Item -Path .\OutputPackage\include -ItemType directory
           New-Item -Path .\OutputPackage\licenses -ItemType directory
-          Copy-Item .\src\DataDistributionManager\DataDistributionManagerEnums.h .\OutputPackage\include\DataDistributionManagerEnums.h
-          Copy-Item .\src\DataDistributionManager\DataDistributionManagerTypes.h .\OutputPackage\include\DataDistributionManagerTypes.h          
-          Copy-Item .\src\DataDistributionManager\DataDistributionManager.h .\OutputPackage\include\DataDistributionManager.h
-          Copy-Item .\src\DataDistributionManager\SmartDataDistributionManager.h .\OutputPackage\include\SmartDataDistributionManager.h
+          Copy-Item .\src\native\DataDistributionManager\DataDistributionManagerEnums.h .\OutputPackage\include\DataDistributionManagerEnums.h
+          Copy-Item .\src\native\DataDistributionManager\DataDistributionManagerTypes.h .\OutputPackage\include\DataDistributionManagerTypes.h          
+          Copy-Item .\src\native\DataDistributionManager\DataDistributionManager.h .\OutputPackage\include\DataDistributionManager.h
+          Copy-Item .\src\native\DataDistributionManager\SmartDataDistributionManager.h .\OutputPackage\include\SmartDataDistributionManager.h
           Copy-Item .\Output\x86\DataDistributionManager.lib .\OutputPackage\lib\x86\DataDistributionManager.lib -Force
           Copy-Item .\Output\x64\DataDistributionManager.lib .\OutputPackage\lib\x64\DataDistributionManager.lib -Force
           Copy-Item .\Output\*.dll .\OutputPackage\runtime\ -Force
@@ -359,8 +366,8 @@ jobs:
           Copy-Item .\Output\x64\*.pdb .\OutputPackage\pdb\x64\ -Force
           Copy-Item .\Output\pdb64\*.pdb .\OutputPackage\pdb\x64\ -Force
           Copy-Item .\LICENSE .\OutputPackage\licenses\LICENSE.datadistributionmanager -Force
-          Copy-Item .\src\packages\librdkafka.redist.2.2.0\LICENSES.txt .\OutputPackage\licenses\LICENSE.librdkafka -Force
-          Copy-Item .\third_party\OpenDDS\LICENSE .\OutputPackage\licenses\LICENSE.opendds -Force
+          Copy-Item .\src\packages\librdkafka.redist.2.5.3\LICENSES.txt .\OutputPackage\licenses\LICENSE.librdkafka -Force
+          Copy-Item .\src\3rdparty\OpenDDS\LICENSE .\OutputPackage\licenses\LICENSE.opendds -Force
           Compress-Archive -Path .\OutputPackage\* -DestinationPath .\OutputPackage\DataDistributionManager.zip
 
       - name: Prepare for Java packaging
@@ -387,7 +394,7 @@ jobs:
         id: publishOnMaven
         continue-on-error: true
         shell: bash
-        run: mvn --file ./packaging/maven/pom.xml --no-transfer-progress --batch-mode -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }} deploy
+        run: mvn --file ./src/packaging/maven/pom.xml --no-transfer-progress --batch-mode -Dgpg.passphrase=${{ secrets.MAVEN_GPG_PASSPHRASE }} deploy
         env:
           MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
           MAVEN_CENTRAL_TOKEN: ${{ secrets.MAVEN_CENTRAL_TOKEN }}
@@ -397,7 +404,7 @@ jobs:
         if: ${{ github.repository_owner != 'masesgroup' || (github.repository_owner == 'masesgroup' && steps.publishOnMaven.outcome == 'success') }}
         shell: cmd
         run: |
-          cd src\DataDistributionManagerJava
+          cd src\jvm
           set JDK_ROOT_FOLDER=%JAVA_HOME_11_X64%
           CreateJar.bat
           cd ..\..
@@ -406,10 +413,10 @@ jobs:
         run: Remove-Item .\docs\* -Recurse -Force -Exclude _config.yml,CNAME
 
       - name: Download Doxygen tool
-        run: C:\msys64\usr\bin\wget.exe https://www.doxygen.nl/files/doxygen-1.9.7.windows.x64.bin.zip
+        run: C:\msys64\usr\bin\wget.exe https://www.doxygen.nl/files/doxygen-1.12.0.windows.x64.bin.zip
 
       - name: Expand Doxygen package
-        run: Expand-Archive -LiteralPath '.\doxygen-1.9.7.windows.x64.bin.zip' -DestinationPath .\src\Documentation -Force
+        run: Expand-Archive -LiteralPath '.\doxygen-1.12.0.windows.x64.bin.zip' -DestinationPath .\src\Documentation -Force
 
       - name: Create C/C++ documentation
         shell: cmd
@@ -427,7 +434,7 @@ jobs:
       - uses: nuget/setup-nuget@v2.0.0
         with:
           nuget-version: '5.x'
-      - run: nuget pack packaging\nuget\datadistributionmanager.nuspec
+      - run: nuget pack src\packaging\nuget\datadistributionmanager.nuspec
 
       - uses: actions/upload-artifact@v4
         with:
@@ -437,7 +444,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: MavenDeploy
-          path: .\packaging\maven\target\*.jar
+          path: .\src\packaging\maven\target\*.jar
 
       - uses: actions/upload-artifact@v4
         with:

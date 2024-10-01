@@ -3,7 +3,7 @@
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
-    <TargetFrameworks>net6.0;net7.0;net462</TargetFrameworks>
+    <TargetFrameworks>net462;net6.0;net8.0</TargetFrameworks>
     <RootNamespace>MASES.DataDistributionManager.Bindings</RootNamespace>
     <LangVersion>latest</LangVersion>
     <AssemblyName>DataDistributionManagerNet</AssemblyName>
@@ -13,16 +13,12 @@
 	<GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(TargetFramework)' != 'net462'">
-    <DefineConstants>$(DefineConstants);NET_STANDARD</DefineConstants>
-  </PropertyGroup>
-	
   <ItemGroup>
-    <Compile Include="..\ProductInformation\Version.cs">
+    <Compile Include="..\..\ProductInformation\Version.cs">
       <Link>Properties\Version.cs</Link>
     </Compile>
-    <Compile Include="..\ProductInformation\ComponentVersion.cs">
-      <Link>Properties\ComponentVersion.c</Link>
+    <Compile Include="..\..\ProductInformation\ComponentVersion.cs">
+      <Link>Properties\ComponentVersion.cs</Link>
     </Compile>
     <Compile Include="BaseConfiguration.cs" />
     <Compile Include="Configuration\KafkaChannelConfiguration.cs" />
